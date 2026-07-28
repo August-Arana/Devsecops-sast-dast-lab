@@ -1,0 +1,19 @@
+{
+  "name": "devsecops-sast-dast-lab-app",
+  "version": "1.0.0",
+  "description": "Aplicacion vulnerable intencional para una clase de DevSecOps con SAST y DAST.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "NODE_ENV=development node src/server.js",
+    "test": "node --test test/*.test.js",
+    "audit:high": "npm audit --audit-level=high"
+  },
+  "dependencies": {
+    "express": "4.17.1",
+    "lodash": "4.17.20",
+    "sqlite3": "5.1.7"
+  },
+  "devDependencies": {}
+}

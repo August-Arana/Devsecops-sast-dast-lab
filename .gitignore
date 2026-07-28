@@ -1,0 +1,7 @@
+node_modules/
+coverage/
+.env
+npm-debug.log*
+security/reports/*
+!security/reports/.gitkeep
+.DS_Store

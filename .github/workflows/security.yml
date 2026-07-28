@@ -1,0 +1,122 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  sast:
+    name: SAST - Semgrep custom rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          mkdir -p security/reports
+          docker run --rm \
+            -v "$PWD:/src" \
+            semgrep/semgrep:latest \
+            semgrep scan \
+              --config /src/security/semgrep-rules.yml \
+              --json \
+              --output /src/security/reports/semgrep-report.json \
+              /src/app
+
+      - name: Upload Semgrep report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: security/reports/semgrep-report.json
+
+  secrets:
+    name: Secrets - Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        run: |
+          mkdir -p security/reports
+          docker run --rm \
+            -v "$PWD:/repo" \
+            zricethezav/gitleaks:latest \
+            detect \
+              --source /repo \
+              --no-git \
+              --config /repo/security/gitleaks.toml \
+              --report-format json \
+              --report-path /repo/security/reports/gitleaks-report.json \
+              --verbose
+
+      - name: Upload Gitleaks report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: security/reports/gitleaks-report.json
+
+  sca:
+    name: SCA - npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: app
+        run: npm install
+
+      - name: npm audit high+
+        working-directory: app
+        run: npm audit --audit-level=high
+
+  dast:
+    name: DAST - OWASP ZAP baseline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start vulnerable app
+        run: |
+          docker compose up --build -d app
+          ./scripts/wait-for-app.sh http://localhost:3000/health
+
+      - name: Run ZAP baseline scan
+        run: |
+          mkdir -p security/reports
+          docker run --rm \
+            --network host \
+            -v "$PWD/security:/zap/wrk" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+              -t http://127.0.0.1:3000 \
+              -c /zap/wrk/zap/zap-baseline.conf \
+              -r reports/zap-baseline-report.html \
+              -w reports/zap-baseline-report.md \
+              -J reports/zap-baseline-report.json \
+              -I
+
+      - name: Upload ZAP reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline-reports
+          path: security/reports/zap-baseline-report.*
+
+      - name: Stop app
+        if: always()
+        run: docker compose down --remove-orphans

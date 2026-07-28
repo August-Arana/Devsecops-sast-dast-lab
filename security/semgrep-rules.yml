@@ -1,0 +1,63 @@
+rules:
+  - id: devsecops-lab.javascript.sql-string-concat
+    message: "Possible SQL Injection: user-controlled input is concatenated into a SQL query. Prefer parameterized queries/prepared statements."
+    severity: ERROR
+    languages: [javascript]
+    patterns:
+      - pattern-either:
+          - pattern: |
+              const $SQL = "..." + $INPUT + "...";
+          - pattern: |
+              let $SQL = "..." + $INPUT + "...";
+          - pattern: |
+              const $SQL = `...${$INPUT}...`;
+          - pattern: |
+              let $SQL = `...${$INPUT}...`;
+      - metavariable-regex:
+          metavariable: $SQL
+          regex: (?i).*(sql|query).*
+    metadata:
+      category: security
+      technology: [express, sqlite]
+      cwe: "CWE-89: SQL Injection"
+
+  - id: devsecops-lab.express.reflected-xss-send
+    message: "Possible reflected XSS: HTML response is built with unsanitized request data. Escape output or render with a safe template engine."
+    severity: ERROR
+    languages: [javascript]
+    patterns:
+      - pattern-either:
+          - pattern: |
+              res.send(`...${$INPUT}...`)
+          - pattern: |
+              res.type('html').send(`...${$INPUT}...`)
+          - pattern: |
+              res.type("html").send(`...${$INPUT}...`)
+    metadata:
+      category: security
+      technology: [express]
+      cwe: "CWE-79: Cross-site Scripting"
+
+  - id: devsecops-lab.javascript.hardcoded-secret
+    message: "Hardcoded secret-like value found. Store secrets outside the repository and inject them at runtime."
+    severity: ERROR
+    languages: [javascript]
+    pattern-regex: (?i)(api[_-]?key|secret|token|password)\s*[:=]\s*['\"][A-Za-z0-9_\-\./+]{20,}['\"]
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+
+  - id: devsecops-lab.express.debug-env-exposure
+    message: "Debug endpoint appears to expose process/environment details. Avoid exposing runtime internals to clients."
+    severity: WARNING
+    languages: [javascript]
+    pattern-either:
+      - pattern: |
+          res.json({ ..., envPreview: ..., ... })
+      - pattern: |
+          res.json(process.env)
+      - pattern: |
+          $RES.json({ ..., sampleSecret: ..., ... })
+    metadata:
+      category: security
+      cwe: "CWE-200: Exposure of Sensitive Information"

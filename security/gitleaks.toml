@@ -1,0 +1,15 @@
+title = "DevSecOps Lab Gitleaks config"
+
+[[rules]]
+id = "demo-stripe-live-secret"
+description = "Detect fake Stripe live keys used in the demo"
+regex = '''sk_live_[0-9A-Za-z]{20,}'''
+secretGroup = 0
+keywords = ["sk_live_"]
+
+[[rules]]
+id = "demo-jwt-secret"
+description = "Detect demo JWT signing secrets"
+regex = '''(?i)(jwt[_-]?signing[_-]?secret|jwtSecret)\s*=\s*['\"][^'\"]{16,}['\"]'''
+secretGroup = 0
+keywords = ["JWT", "jwt"]

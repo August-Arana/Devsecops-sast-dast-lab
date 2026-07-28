@@ -1,0 +1,25 @@
+name: Security Gates Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  teaching-gate:
+    name: Example of policy-based blocking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: SAST gate - block high findings
+        run: |
+          docker run --rm -v "$PWD:/src" semgrep/semgrep:latest \
+            semgrep scan --config /src/security/semgrep-rules.yml --error /src/app
+
+      - name: Secrets gate - block any secret
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest \
+            detect --source /repo --no-git --config /repo/security/gitleaks.toml --verbose
+
+      - name: DAST gate - example only
+        run: |
+          echo "In real teams, DAST usually runs against staging and fails deploy only for selected high-risk alerts."
