@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-docker compose up --build -d app
+sudo docker-compose up --build -d app
 ./scripts/wait-for-app.sh
 
 echo

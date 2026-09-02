@@ -2,6 +2,6 @@
 // En una aplicacion real, esto deberia venir de un secret manager o variables de entorno.
 
 module.exports = {
-  STRIPE_SECRET_KEY,
-  JWT_SIGNING_SECRET,
+  STRIPE_SECRET_KEY:  "sk_test_51EXAMPLE_FAKE_SECRET_FOR_TRAINING",
+  JWT_SIGNING_SECRET: "super-insecure-jwt-secret-123456",
 };
