@@ -22,6 +22,7 @@ jobs:
             semgrep/semgrep:latest \
             semgrep scan \
               --config /src/security/semgrep-rules.yml \
+              --error \
               --json \
               --output /src/security/reports/semgrep-report.json \
               /src/app
